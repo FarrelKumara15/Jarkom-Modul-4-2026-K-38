@@ -285,6 +285,12 @@ sh setup-router.sh <router>
 
 <br/>
 
+#### Hasil setup router Cyberia
+
+Hasil menjalankan `sh setup-router.sh Cyberia` menunjukkan alamat internal `eth1` = `192.230.64.129/30` dan `eth2` = `192.230.64.1/25`, route menuju `192.230.0.0/18` melalui Wired, serta IP forwarding bernilai `1`. Pada saat screenshot diambil, interface WAN `eth0` juga sudah memiliki alamat `192.168.122.53/24` dan aturan NAT berhasil diterapkan.
+
+![Hasil konfigurasi IP, routing, dan forwarding router Cyberia](CIDR/Assets/konfigurasi-router-cyberia.png)
+
 #### Router Test
 Di router Cyberia
 
@@ -336,40 +342,113 @@ sh setup-client.sh <endpoint>
 | Lain | `sh setup-client.sh Lain` |
 | Mika | `sh setup-client.sh Mika` |
 
-#### Tes gateway
-Jalankan di JJ
+#### Tes gateway dan koneksi antar-subnet dari JJ
+
+Jalankan di console JJ:
+
 ```sh
+# Gateway JJ pada Cyberia
 ping -c 4 192.230.64.1
+
+# Endpoint Karl pada subnet A4
 ping -c 4 192.230.16.2
+
+# Endpoint Lain pada subnet A25
 ping -c 4 192.230.32.2
 ```
 
-Tes koneksi Cyberia ke gateway NAT
-```bash
-ping -c 4 192.168.122.1
+Ketiga tujuan membalas ping dengan **0% packet loss**. Hasil ini menunjukkan JJ dapat mencapai gateway serta endpoint pada cabang Psyche dan Shibuya. Screenshot yang sama juga memuat ping internet yang berhasil; hasil DNS lanjutannya ditampilkan pada bagian pengujian DNS JJ.
+
+![Ping dari JJ ke gateway Cyberia, Karl, Lain, dan internet](CIDR/Assets/ping-antar-subnet-dan-internet-jj.png)
+
+#### Pengujian 62 alamat IP internal dari Cyberia
+
+Setelah seluruh router dan endpoint dikonfigurasi, jalankan di console Cyberia:
+
+```sh
+sh test-all.sh Cyberia > Cyberia-internal.csv
+cat Cyberia-internal.csv
 ```
 
-Tes akses internet Cyberia
-```bash
+Ringkasan pengujian menunjukkan **PASS=62** dan **FAIL=0** untuk daftar target internal dari Cyberia.
+
+![Ringkasan pengujian 62 alamat IP dari Cyberia: PASS 62 dan FAIL 0](CIDR/Assets/ringkasan-pengujian-62-ip-cyberia.png)
+
+Berikut cuplikan isi CSV yang mencatat sumber, target, alamat IP, dan status pengujian. Screenshot detail hanya menampilkan sebagian baris CSV; jumlah keseluruhan hasil terlihat pada ringkasan di atas. Pengujian ini menggunakan Cyberia sebagai sumber, sehingga hasilnya tidak mewakili pengujian setiap pasangan node.
+
+![Cuplikan hasil CSV pengujian IP router dan endpoint dari Cyberia](CIDR/Assets/detail-pengujian-ip-cyberia.png)
+
+#### Pemeriksaan IP WAN dan default route Cyberia
+
+Jalankan di console Cyberia:
+
+```sh
+ip -4 address show dev eth0
+ip route show default
+```
+
+Pada saat pengujian, `eth0` memiliki IP `192.168.122.53/24` dan default route menuju gateway NAT `192.168.122.1`. Alamat WAN mengikuti jaringan NAT dan dapat berubah sesuai lease DHCP.
+
+![Alamat WAN eth0 dan default route Cyberia menuju NAT](CIDR/Assets/ip-wan-dan-default-route-cyberia.png)
+
+#### Tes gateway NAT dan internet dari Cyberia
+
+Jalankan di console Cyberia:
+
+```sh
+# Gateway NAT
+ping -c 4 192.168.122.1
+
+# Alamat IP internet
 ping -c 4 1.1.1.1
 ```
 
-Tes DNS Cyberia
-```bash
+Kedua tujuan membalas seluruh paket dengan **0% packet loss**.
+
+![Ping gateway NAT dan internet dari Cyberia berhasil](CIDR/Assets/ping-gateway-nat-dan-internet-cyberia.png)
+
+#### Tes DNS dari Cyberia
+
+Jalankan di console Cyberia:
+
+```sh
 cat /etc/resolv.conf
 getent ahostsv4 deb.debian.org
 ```
 
-Jalankan NAT dan periksa aturan NAT di Cyberia
-```bash 
+Resolver yang digunakan adalah `192.168.122.1`. Nama `deb.debian.org` berhasil diresolusikan menjadi alamat IPv4 `146.75.46.132` pada saat pengujian. Alamat hasil resolusi dapat berubah.
+
+![Konfigurasi resolver dan hasil resolusi DNS dari Cyberia](CIDR/Assets/pengujian-dns-cyberia.png)
+
+#### Penerapan NAT dan IP forwarding di Cyberia
+
+Jalankan di console Cyberia:
+
+```sh
 sh nat.sh
 cat /proc/sys/net/ipv4/ip_forward
 iptables -t nat -L POSTROUTING -n -v
 iptables -L FORWARD -n -v
 ```
 
-Tes internet di JJ
-```bash 
+IP forwarding bernilai **1**. Aturan `MASQUERADE` diterapkan untuk sumber `192.230.0.0/17` yang keluar melalui `eth0`. Tabel `FORWARD` juga memuat aturan untuk trafik keluar dari jaringan internal dan trafik balasan dengan status `RELATED,ESTABLISHED`.
+
+![Penerapan NAT, IP forwarding, dan aturan FORWARD di Cyberia](CIDR/Assets/konfigurasi-nat-dan-forwarding-cyberia.png)
+
+<details>
+<summary>Screenshot tambahan verifikasi aturan NAT Cyberia</summary>
+
+Screenshot berikut mendokumentasikan pemeriksaan ulang aturan NAT dan forwarding yang sama.
+
+![Pemeriksaan ulang aturan NAT dan forwarding Cyberia](CIDR/Assets/verifikasi-aturan-nat-cyberia.png)
+
+</details>
+
+#### Tes gateway, internet, dan DNS dari JJ
+
+Jalankan di console JJ:
+
+```sh
 # Gateway JJ, yaitu Cyberia
 ping -c 4 192.230.64.1
 
@@ -379,6 +458,31 @@ ping -c 4 1.1.1.1
 # Resolusi DNS
 nslookup deb.debian.org
 ```
+
+Ping ke gateway dan internet berhasil dengan **0% packet loss**. Perintah `nslookup` juga memperoleh jawaban DNS melalui server `192.168.122.1`.
+
+![Pengujian gateway, internet, dan resolusi DNS dari endpoint JJ](CIDR/Assets/pengujian-gateway-internet-dan-dns-jj.png)
+
+<details>
+<summary>Hasil DNS lanjutan dari screenshot pengujian awal JJ</summary>
+
+Gambar ini merupakan lanjutan keluaran `nslookup` pada screenshot pengujian antar-subnet JJ. Jawaban DNS memuat alias serta alamat IPv4 dan IPv6 tujuan.
+
+![Lanjutan hasil resolusi DNS deb.debian.org dari JJ](CIDR/Assets/hasil-resolusi-dns-jj.png)
+
+</details>
+
+#### Verifikasi paket melewati NAT Cyberia
+
+Setelah pengujian internet dari endpoint, periksa kembali counter NAT di console Cyberia:
+
+```sh
+iptables -t nat -L POSTROUTING -n -v
+```
+
+Counter aturan `MASQUERADE` pada screenshot ini menunjukkan **6 paket dan 428 byte**, dibandingkan **3 paket dan 214 byte** pada screenshot konfigurasi NAT sebelumnya. Kenaikan counter menunjukkan ada paket tambahan yang cocok dengan aturan NAT. Counter tabel NAT tidak menghitung seluruh paket dari setiap koneksi.
+
+![Counter MASQUERADE Cyberia meningkat menjadi 6 paket dan 428 byte](CIDR/Assets/counter-masquerade-cyberia.png)
 
 ### VLSM
 
