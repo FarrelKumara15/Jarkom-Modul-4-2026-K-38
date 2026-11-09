@@ -491,7 +491,7 @@ Counter aturan `MASQUERADE` pada screenshot ini menunjukkan **6 paket dan 428 by
 
 ### VLSM
 
-![Topologi CPT](assets/1-cpt.png)
+![Topologi CPT](VLSM/assets/1-cpt.png)
 
 ## Hasil Subnetting
 
@@ -523,11 +523,11 @@ Counter aturan `MASQUERADE` pada screenshot ini menunjukkan **6 paket dan 428 by
 | 24  | A22    | Knights > Phantoma                          | 2         | 4    | /30    | 192.230.16.84  | 255.255.255.252 | 192.230.16.85 - 192.230.16.86   | 192.230.16.87  |
 | 25  | A24    | Phantoma > Shibuya                          | 2         | 4    | /30    | 192.230.16.88  | 255.255.255.252 | 192.230.16.89 - 192.230.16.90   | 192.230.16.91  |
 
-![Spreadsheet subnetting](assets/2-cpt.png)
+![Spreadsheet subnetting](VLSM/assets/2-cpt.png)
 
 ## Pohon Pembagian IP
 
-![Pohon pembagian IP VLSM](assets/3-cpt.png)
+![Pohon pembagian IP VLSM](VLSM/assets/3-cpt.png)
 
 ```
 192.230.0.0/19  (root, 4188 alamat terpakai dari 8192)
@@ -822,7 +822,7 @@ Total: **49 static route** di seluruh topologi. Ringkasan di tiap cabang sudah d
 | A25    | Lain         | 192.230.15.2   | 255.255.255.192 | 192.230.15.1    |
 | A25    | Mika         | 192.230.15.3   | 255.255.255.192 | 192.230.15.1    |
 
-![IP Configuration host](assets/4-cpt.png)
+![IP Configuration host](VLSM/assets/4-cpt.png)
 
 ## Pengujian
 
@@ -830,10 +830,10 @@ Total: **49 static route** di seluruh topologi. Ringkasan di tiap cabang sudah d
 
 Contoh `show ip interface brief` dan `show ip route` di Wired (hub) dan Shibuya (ujung):
 
-![Wired interface](assets/5-cpt.png)
-![Wired route](assets/6-cpt.png)
-![Shibuya route](assets/7-cpt.png)
+![Wired interface](VLSM/assets/5-cpt.png)
+![Wired route](VLSM/assets/6-cpt.png)
+![Shibuya route](VLSM/assets/7-cpt.png)
 
 ### Ping antar node
 
-![PDU List](assets/12-cpt.png)
+![PDU List](VLSM/assets/12-cpt.png)
