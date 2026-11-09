@@ -836,4 +836,4 @@ Contoh `show ip interface brief` dan `show ip route` di Wired (hub) dan Shibuya 
 
 ### Ping antar node
 
-![PDU List](VLSM/assets/12-cpt.png)
+![PDU List](VLSM/assets/8-cpt.png)
